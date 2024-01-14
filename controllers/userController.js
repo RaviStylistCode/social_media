@@ -246,7 +246,7 @@ exports.AllUsers=asyncError(async(req,res)=>{
 
     res.status(200).json({
         success:true,
-        message:"All Users",
+        message:"All Users Details",
         users
     })
 })
