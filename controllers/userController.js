@@ -2,6 +2,8 @@ const User = require("../models/userModel");
 const Post = require("../models/postModel");
 const asyncError = require("../middlewares/asyncError");
 const sendToken = require("../utils/sendToken");
+const sendMail = require("../utils/sendMail");
+const fs = require("fs");
 
 //register karo bhai
 exports.registerUser = asyncError(async (req, res) => {
@@ -25,6 +27,7 @@ exports.registerUser = asyncError(async (req, res) => {
     name,
     email,
     password,
+    photo:"this is photo"
   });
 
   sendToken(user, res, 201, "Registered Successfully");
@@ -141,12 +144,12 @@ exports.updatePassword = asyncError(async (req, res) => {
     });
   }
 
-  const isMatched= await user.comparePassword(oldPassword);
-  if(!isMatched){
+  const isMatched = await user.comparePassword(oldPassword);
+  if (!isMatched) {
     return res.status(404).json({
-        success:false,
-        message:'invalid old password'
-    })
+      success: false,
+      message: "invalid old password",
+    });
   }
 
   user.password = newPassword;
@@ -162,7 +165,14 @@ exports.updatePassword = asyncError(async (req, res) => {
 exports.updateProfile = asyncError(async (req, res) => {
   const user = await User.findById(req.user._id);
   const { name, email } = req.body;
+  const photo = req.file;
 
+  if (photo) {
+    fs.unlink(user.photo, () => {
+      console.log("photo deleted");
+    });
+    user.photo = photo.path;
+  }
   if (name) {
     user.name = name;
   }
@@ -180,73 +190,131 @@ exports.updateProfile = asyncError(async (req, res) => {
 });
 
 //delete my Profile
-exports.deleteMyProfile=asyncError(async(req,res)=>{
+exports.deleteMyProfile = asyncError(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  const posts = user.posts;
+  const userId = user._id;
+  const following = user.following;
+  const follower = user.follower;
+  await user.deleteOne();
 
-    const user=await User.findById(req.user._id);
-    const posts=user.posts;
-    const userId=user._id;
-    const following=user.following;
-    const follower= user.follower;
-    await user.deleteOne();
+  res.cookie("token", null, { expires: new Date(Date.now()) });
 
-    res.cookie('token',null,{expires:new Date(Date.now())});
+  for (let i = 0; i < posts.length; i++) {
+    const post = await Post.findById(posts[i]);
+    await post.deleteOne();
+  }
 
-    for(let i=0;i<posts.length;i++){
-        const post = await Post.findById(posts[i]);
-        await post.deleteOne();
-    }
+  for (let i = 0; i < follower.length; i++) {
+    const followUser = await User.findById(follower[i]);
+    const index = followUser.following.indexOf(userId);
+    followUser.following.splice(index, 1);
+    await followUser.save();
+  }
 
-    for(let i=0;i<follower.length;i++){
-        const followUser= await User.findById(follower[i]);
-        const index= followUser.following.indexOf(userId);
-        followUser.following.splice(index,1);
-        await followUser.save();
-    }
+  for (let i = 0; i < following.length; i++) {
+    const followingUser = await User.findById(following[i]);
+    const index = followingUser.follower.indexOf(userId);
+    followingUser.follower.splice(index, 1);
+    await followingUser.save();
+  }
 
-    for(let i=0;i<following.length;i++){
-        const followingUser= await User.findById(following[i]);
-        const index= followingUser.follower.indexOf(userId);
-        followingUser.follower.splice(index,1);
-        await followingUser.save();
-    }
-
-    res.status(200).json({
-        success:true,
-        message:"user deleted successfully"
-    });
-
-})
+  res.status(200).json({
+    success: true,
+    message: "user deleted successfully",
+  });
+});
 
 //getUser profile
-exports.getUserProfile=asyncError(async(req,res)=>{
-
-    const user= await User.findById(req.params.id).populate("posts");
-    if(!user){
-        return res.status(400).json({
-            success:false,
-            message:"user does not exist"
-        })
-    }
-    res.status(200).json({
-        success:true,
-        message:"single user profile",
-        user
-    })
-})
+exports.getUserProfile = asyncError(async (req, res) => {
+  const user = await User.findById(req.params.id).populate("posts");
+  if (!user) {
+    return res.status(400).json({
+      success: false,
+      message: "user does not exist",
+    });
+  }
+  res.status(200).json({
+    success: true,
+    message: "single user profile",
+    user,
+  });
+});
 
 //All users
-exports.AllUsers=asyncError(async(req,res)=>{
-    const users= await User.find();
-    if(!users){
-        return res.status(400).json({
-            success:false,
-            message:"users not found"
-        })
-    }
+exports.AllUsers = asyncError(async (req, res) => {
+  const users = await User.find();
+  if (!users) {
+    return res.status(400).json({
+      success: false,
+      message: "users not found",
+    });
+  }
 
-    res.status(200).json({
-        success:true,
-        message:"All Users Details",
-        users
+  res.status(200).json({
+    success: true,
+    message: "All Users Details",
+    users,
+  });
+});
+
+exports.forgetPassword = asyncError(async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({
+      success: false,
+      message: "please enter a email",
+    });
+  }
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "user does not exist",
+    });
+  }
+
+  const otp = Math.floor(Math.random() * 1000000);
+  user.resetOtp = otp;
+  user.resetOtpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+  await user.save();
+  await sendMail(
+    user.email,
+    "For Resseting password",
+    `This otp = ${otp} for Resetting password`
+  );
+  res.status(200).json({
+    success: true,
+    message: `Mail sent to Email -> ${email} | please check your email account`,
+  });
+});
+
+
+exports.resetPassword=asyncError(async(req,res)=>{
+
+  const {otp}=req.body;
+  if(!otp){
+    return res.status(400).json({
+      success:false,
+      message:"please enter a valid otp"
     })
+  }
+
+  const user= await User.findOne({
+    resetOtp:otp,
+    resetOtpExpiry:{ $gt:Date.now()}
+  })
+
+  if(!user){
+    return res.status(404).json({
+      success:false,
+      message:"user does not exist"
+    })
+  }
+
+  user.resetOtp=null;
+  user.resetOtpExpiry=null;
+  await user.save();
+  sendToken(user,res,200,'password updated successfully');
 })

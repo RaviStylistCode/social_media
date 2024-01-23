@@ -7,7 +7,7 @@ exports.isAuthenticated=async(req,res,next)=>{
     if(!token){
         return res.status(400).json({
             success:false,
-            messsage:'Login kar sale pehle'
+            messsage:'Login First'
         })
     }
     const decode= jwt.verify(token,process.env.Jwt_Token)

@@ -10,11 +10,14 @@ const {
   deleteMyProfile,
   AllUsers,
   getUserProfile,
+  forgetPassword,
+  resetPassword,
 } = require("../controllers/userController");
 
 const router = express.Router();
 
 const { isAuthenticated } = require("../middlewares/auth");
+const { fileupload } = require("../middlewares/multer");
 
 router.route("/register").post(registerUser);
 router.route("/login").post(loginUser);
@@ -23,10 +26,13 @@ router.route("/me").get(isAuthenticated, myProfile);
 
 router.route("/follow/:id").get(isAuthenticated, followAndUnfollow);
 router.route("/updatepassword").put(isAuthenticated, updatePassword);
-router.route("/update/profile").put(isAuthenticated, updateProfile);
+router.route("/update/profile").put(isAuthenticated, fileupload,updateProfile);
 
 router.route('/delete/me').delete(isAuthenticated,deleteMyProfile); 
 router.route('/alluser').get(isAuthenticated,AllUsers);
 router.route('/followed/:id').get(isAuthenticated,getUserProfile); 
+
+router.route("/forget/password").post(forgetPassword);
+router.route("/reset/password").post(resetPassword);
 
 module.exports = router;

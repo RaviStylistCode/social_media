@@ -15,6 +15,7 @@ const postRouter=require("./routes/postRoute");
 
 app.use("/api/v1/users",userRouter);
 app.use("/api/v1/posts",postRouter);
+app.use("/uploads",express.static('uploads'))
 
 
 module.exports=app;

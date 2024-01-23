@@ -41,6 +41,9 @@ const userSchema = new mongoose.Schema({
       ref: "user",
     },
   ],
+
+  resetOtp:Number,
+  resetOtpExpiry:Date
   
   
 });

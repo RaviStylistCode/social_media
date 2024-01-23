@@ -36,7 +36,12 @@ const postSchema= new mongoose.Schema({
                 required:true
             }  
         }
-    ]
+    ],
+    
+    numOfView:{
+        type:Number,
+        default:0
+    }
     
 });
 
