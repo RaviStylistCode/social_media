@@ -29,7 +29,7 @@ router.route("/updatepassword").put(isAuthenticated, updatePassword);
 router.route("/update/profile").put(isAuthenticated, fileupload,updateProfile);
 
 router.route('/delete/me').delete(isAuthenticated,deleteMyProfile); 
-router.route('/alluser').get(isAuthenticated,AllUsers);
+router.route('/alluser').get(AllUsers);
 router.route('/followed/:id').get(isAuthenticated,getUserProfile); 
 
 router.route("/forget/password").post(forgetPassword);

@@ -4,6 +4,15 @@ const asyncError = require("../middlewares/asyncError");
 
 //post create kar bhai
 exports.uploadPost = asyncError(async (req, res) => {
+
+  const {caption}=req.body;
+  const photo=req.file;
+  if(!photo){
+    return res.status(400).json({
+      success:false,
+      message:"please add an image"
+    })
+  }
   const user = await User.findById(req.user._id);
   if (!user) {
     return res.status(404).json({
@@ -13,8 +22,8 @@ exports.uploadPost = asyncError(async (req, res) => {
   }
 
   const options = {
-    caption: req.body.caption,
-    photo: "http://www.google.com/bird.jpeg",
+    caption: caption,
+    photo: photo.path,
     owner: req.user._id,
   };
 
