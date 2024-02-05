@@ -105,6 +105,32 @@ exports.deleteSinglePost = asyncError(async (req, res) => {
   });
 });
 
+//delete all post
+exports.deleteallPost=asyncError(async(req,res)=>{
+
+  const post = await Post.find();
+
+  if(!post){
+    return res.status(404).json({
+      success:false,
+      message:"post not found"
+    });
+  }
+
+  for(let i=0;i<=post.length;i++){
+    await post[i].deleteOne();
+  }
+
+  await post.save();
+
+  res.status(200).json({
+    success:true,
+    message:`All post deleted successfully`,
+    post
+  });
+
+})
+
 /// getpost of following user
 exports.getPostOfFollowing = asyncError(async (req, res) => {
   const user = await User.findById(req.user._id);

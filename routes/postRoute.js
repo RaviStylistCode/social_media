@@ -7,6 +7,7 @@ const {
   updateCaption,
   addComments,
   singlePost,
+  deleteallPost,
 } = require("../controllers/postController");
 const { isAuthenticated } = require("../middlewares/auth");
 const { fileupload } = require("../middlewares/multer");
@@ -24,5 +25,6 @@ router
 router.route("/single/:id").get(isAuthenticated,singlePost);
 router.route("/").get(isAuthenticated, getPostOfFollowing);
 router.route("/comment/:id").put(isAuthenticated,addComments);
+router.route("/delete/all").delete(isAuthenticated,deleteallPost);
 
 module.exports = router;
