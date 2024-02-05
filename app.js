@@ -8,7 +8,10 @@ app.use(express.urlencoded({extended:true}));
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use(cors());
+app.use(cors({
+  origin:"*"
+  methods:["GET","POST","DELETE","PUT"]
+}));
 
 const userRouter=require("./routes/userRoute");
 const postRouter=require("./routes/postRoute");
