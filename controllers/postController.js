@@ -95,9 +95,12 @@ exports.deleteSinglePost = asyncError(async (req, res) => {
 
   const postId = post._id;
   await post.deleteOne();
-  const index = user.posts.indexOf(postId);
-  user.posts.splice(index, 1);
-  await user.save();
+
+  for(let i=0;i<user.posts.length;i++){
+    const index = user.posts[i].indexOf(postId);
+    user.posts.splice(index, 1);
+    await user.save();
+  }
 
   res.status(200).json({
     success: true,
@@ -220,5 +223,22 @@ exports.singlePost = asyncError(async (req, res) => {
     success: true,
     message: "single post",
     post,
+    
   });
 });
+
+exports.allposts=asyncError(async(req,res)=>{
+
+  const post= await Post.find();
+  if(!post){
+    return res.status(404).json({
+      success:false,
+      message:"posts not found"
+    })
+  }
+
+  res.status(200).json({
+    success:true,
+    post
+  })
+})

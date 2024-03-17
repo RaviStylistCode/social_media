@@ -8,6 +8,7 @@ const {
   addComments,
   singlePost,
   deleteallPost,
+  allposts,
 } = require("../controllers/postController");
 const { isAuthenticated } = require("../middlewares/auth");
 const { fileupload } = require("../middlewares/multer");
@@ -15,7 +16,7 @@ const { fileupload } = require("../middlewares/multer");
 const router = express.Router();
 
 router.route("/upload").post(isAuthenticated,fileupload ,uploadPost);
-
+router.route("/allpost").get(allposts);
 router
   .route("/:id")
   .get(isAuthenticated, likeAndUnlikePost)

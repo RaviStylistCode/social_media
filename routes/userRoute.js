@@ -12,6 +12,7 @@ const {
   getUserProfile,
   forgetPassword,
   resetPassword,
+  findUserByQuery,
 } = require("../controllers/userController");
 
 const router = express.Router();
@@ -30,6 +31,7 @@ router.route("/update/profile").put(isAuthenticated, fileupload,updateProfile);
 
 router.route('/delete/me').delete(isAuthenticated,deleteMyProfile); 
 router.route('/alluser').get(AllUsers);
+router.route("/search").get(findUserByQuery);
 router.route('/followed/:id').get(isAuthenticated,getUserProfile); 
 
 router.route("/forget/password").post(forgetPassword);

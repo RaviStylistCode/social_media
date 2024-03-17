@@ -85,10 +85,17 @@ exports.myProfile = asyncError(async (req, res) => {
     });
   }
 
+  const follower= user.follower.length;
+  const following=user.following.length;
+  const posts= user.posts.length;
+
   res.status(200).json({
     success: true,
     message: "myProfile",
     user,
+    follower,
+    following,
+    posts
   });
 });
 
@@ -257,6 +264,28 @@ exports.AllUsers = asyncError(async (req, res) => {
     users,
   });
 });
+
+exports.findUserByQuery=asyncError(async(req,res)=>{
+
+  const user= await User.find({
+    name:{
+      $regex:req.query.name,
+      $options:'i'
+    }
+  }).sort();
+
+  if(!user){
+    return res.status(400).json({
+      success:false,
+      message:"user not found"
+    })
+  }
+
+  res.status(200).json({
+    success:true,
+    user
+  })
+})
 
 exports.forgetPassword = asyncError(async (req, res) => {
   const { email } = req.body;
